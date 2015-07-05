@@ -1,0 +1,149 @@
+#!/bin/bash
+
+BOLD=$(tput bold);
+ERROR=$(tput setaf 1);
+WARNING=$(tput setaf 3);
+INFO=$(tput setaf 2);
+RESET=$(tput sgr0);
+
+
+# =========================================================
+# Step 1: Check developer's system is good for project
+# =========================================================
+echo "${INFO}STEP 1: HEALTH CHECK"
+echo "${RESET}First check that we have the danger farms tool-set installed."
+echo "python, docker, docker-compose, .env./"
+COUNTER=0
+echo -n "${RESET}python..."
+command -v python >/dev/null 2>&1;
+if [ $? != 0 ]; then
+  echo "${ERROR} not installed."
+  echo "${WARNING}Install for your OS"
+  COUNTER=$[$COUNTER +1]
+else
+  echo " installed"
+fi
+echo -n "${RESET}docker..."
+command -v docker >/dev/null 2>&1;
+if [ $? != 0 ]; then
+  echo "${ERROR} not installed."
+  echo "${WARNING}Install for your OS here: https://docs.docker.com/installation/"
+  COUNTER=$[$COUNTER +1]
+else
+  echo " installed"
+fi
+echo -n "${RESET}docker-compose..."
+command -v docker-compose >/dev/null 2>&1;
+if [ $? != 0 ]; then
+  echo "${ERROR} not installed."
+  echo "${WARNING}Install for your OS here: https://docs.docker.com/compose/install/"
+  COUNTER=$[$COUNTER +1]
+else
+  echo " installed"
+fi
+echo -n "${RESET}environmental file .env..."
+if [ ! -f .env ]; then
+  echo "${ERROR} not installed."
+  echo "${WARNING}You must create a .env file in this directory containing all local environment vars."
+  echo "${WARNING}Ask someone in the team for the current config."
+  COUNTER=$[$COUNTER +1]
+else
+  echo " installed"
+fi
+
+if [ $COUNTER != 0 ]; then
+  echo "${ERROR}Some dependencies missing. Please follow installation instructions above."
+  echo "${RESET}"
+  exit 1;
+fi
+echo "${RESET}"
+
+
+# =========================================================
+# Step 2: Pull docker images so containers can run
+# =========================================================
+echo "${INFO}STEP 2: PULLING DOCKER IMAGES FOR REQUIRED SERVICES; DB, QUEUE ETC..${RESET}"
+services=( postgis geodjango )
+mkdir -p docker-tmp;
+cd docker-tmp;
+for i in "${services[@]}"
+do
+    curl https://raw.githubusercontent.com/dangerfarms/docker-files/master/$i/Dockerfile > Dockerfile;
+    docker build -t dangerfarms/$i .
+    rm Dockerfile;
+done
+cd ..;
+rm -rf docker-tmp;
+echo "${RESET}"
+
+
+# =========================================================
+# Step 3: Create helper commands for serve/test/manage/migrate
+# =========================================================
+echo "${INFO}STEP 3: CREATE HELPER COMMANDS"
+echo "${RESET}TODO"
+echo ""
+
+
+# =========================================================
+# Step 4: Setup up images, containers and data volumes
+# =========================================================
+echo "${INFO}STEP 4: Setup project image, containers and any volumes required${RESET}"
+./.build
+./.requirements
+# TODO: Create default admin user.
+echo "Complete"
+echo "${RESET}"
+
+
+# =========================================================
+# Step 5: Adding git hooks to ensure we are awesome developers
+# =========================================================
+echo "${INFO}STEP 5: GIT HOOKS${RESET}"
+
+rm .git/hooks/*;
+
+echo '#!/bin/bash
+./.test;' > .git/hooks/pre-commit;
+chmod +x .git/hooks/pre-commit;
+
+# Post commit, run npm/bower if files have changed.
+echo '#!/bin/bash
+git pull;' > .git/hooks/post-commit;
+chmod +x .git/hooks/post-commit;
+
+# Post commit, run npm/bower if files have changed.
+echo '#!/bin/bash
+changed_files="$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)"
+
+check_run() {
+  echo "$changed_files" | grep -E --quiet "$1" && eval "$2"
+}
+
+check_run requirements.txt "./.requirements";
+check_run requirements.dev.txt "./.requirements";
+check_run Dockerfile "./.build";
+./.migrate;' > .git/hooks/post-merge;
+chmod +x .git/hooks/post-merge;
+
+# Commit message, prepend with app repo reference
+if [ "" != "" ]
+then
+    echo '#!/bin/bash
+    COMMIT_MSG_PREFIX=""
+    if [[ $(head -c 1 $1) =~ ^# ]]; then
+      echo "Prepending commit message with $COMMIT_MSG_PREFIX";
+      echo -n $COMMIT_MSG_PREFIX | cat - $1 > /tmp/commit-msg-tmp && mv /tmp/commit-msg-tmp $1
+    fi' > .git/hooks/commit-msg;
+    chmod +x .git/hooks/commit-msg;
+
+    echo "Installed."
+    echo ""
+fi
+
+
+# =========================================================
+# Step 6: Setting origin master as base
+# =========================================================
+echo "${INFO}STEP 6: SET GIT UPSTREAM${RESET}"
+git branch --set-upstream-to=origin/master master;

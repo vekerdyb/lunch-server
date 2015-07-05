@@ -1,0 +1,5 @@
+#!/bin/bash
+export COMPOSE_PROJECT_NAME=lunch-server
+docker-compose run --rm web pyvenv /venv;
+docker-compose run --rm web /venv/bin/pip install --upgrade pip
+docker-compose run --rm web /venv/bin/pip install -r requirements.dev.txt

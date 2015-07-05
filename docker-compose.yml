@@ -1,0 +1,14 @@
+web:
+  build: .
+  command:  /venv/bin/python manage.py runserver 0.0.0.0:8000
+  volumes:
+    - .:/app
+    - ./vol/venv:/venv
+  ports:
+    - 8000:8000
+  links:
+    - db
+  env_file:
+    - .env
+db:
+  image: postgres
