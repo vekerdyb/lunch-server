@@ -45,6 +45,9 @@ INSTALLED_APPS = (
     # ... include the providers you want to enable:
     'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.google',
+
+    'lunch.options',
+    'lunch.profiles',
 )
 
 SITE_ID = 1
