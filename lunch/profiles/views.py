@@ -16,7 +16,7 @@ class MeView(TemplateView):
             box_size=10,
             border=4,
         )
-        qr.add_data(request.user.card_set.filter(active=True)[0].uuid)
+        qr.add_data(request.user.profile.card_set.filter(active=True)[0].uuid)
         qr.make(fit=True)
         return qr.make_image()
 

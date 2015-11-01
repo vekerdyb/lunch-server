@@ -1,6 +1,6 @@
 import hashlib
+
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -9,18 +9,21 @@ from lunch.cards.models import Card
 
 User = settings.AUTH_USER_MODEL
 
+
 class Profile(models.Model):
-
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, null=True)
     graduation_date = models.DateField(null=True, blank=True)
+    year_of_graduation = models.IntegerField(null=True, blank=True)
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if self.graduation_date:
+            self.year_of_graduation = self.graduation_date.year
+        super(Profile, self).save(force_insert, force_update, using, update_fields)
 
 
-@receiver(post_save, sender=User)
-def create_profile_for_new_user(sender, **kwargs):
-    created = kwargs.get('created', False)
-    user = kwargs.get('instance')
-    if created and user:
+@receiver(post_save, sender=Profile)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created and instance:
         uuid = hashlib.md5(str(timezone.now().timestamp).encode('utf-8')).hexdigest()
-        Card.objects.create(uuid=uuid, user=user, active=True)
-        Profile.objects.create(user=user)
-
+        Card.objects.create(uuid=uuid, profile=instance, active=True)

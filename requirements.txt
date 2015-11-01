@@ -6,3 +6,4 @@ qrcode
 Pillow
 django-extensions
 django-grappelli
+factory_boy

@@ -3,7 +3,7 @@ from lunch.profiles.models import Profile
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('get_full_name', 'get_email', 'user')
+    list_display = ('get_full_name', 'get_email', 'user', 'graduation_date', 'year_of_graduation')
 
     def get_full_name(self, obj):
         return "%s %s" % (obj.user.first_name, obj.user.last_name)
