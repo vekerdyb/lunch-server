@@ -1,9 +1,11 @@
 web:
   build: .
-  command:  /venv/bin/python manage.py runserver 0.0.0.0:8000
+  command: /venv/bin/python manage.py runserver 0.0.0.0:8000
   volumes:
     - .:/app
     - ./vol/venv:/venv
+    - ./vol/bash_history:/root/.bash_history
+    - ./vol/ipython_history:/root/.ipython/profile_default/history.sqlite
   ports:
     - 8000:8000
   links:

@@ -1,0 +1,3 @@
+#!/bin/bash
+export COMPOSE_PROJECT_NAME=lunch-server
+docker-compose run --rm web bash

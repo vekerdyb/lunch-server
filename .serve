@@ -1,4 +1,4 @@
 #!/bin/bash
 export COMPOSE_PROJECT_NAME=lunch-server
 docker-compose run --rm web /venv/bin/python manage.py migrate
-docker-compose up
+docker-compose run --rm --service-ports web /venv/bin/python manage.py runserver 0.0.0.0:8000

@@ -60,25 +60,7 @@ echo "${RESET}"
 
 
 # =========================================================
-# Step 2: Pull docker images so containers can run
-# =========================================================
-echo "${INFO}STEP 2: PULLING DOCKER IMAGES FOR REQUIRED SERVICES; DB, QUEUE ETC..${RESET}"
-services=( postgis geodjango )
-mkdir -p docker-tmp;
-cd docker-tmp;
-for i in "${services[@]}"
-do
-    curl https://raw.githubusercontent.com/dangerfarms/docker-files/master/$i/Dockerfile > Dockerfile;
-    docker build -t dangerfarms/$i .
-    rm Dockerfile;
-done
-cd ..;
-rm -rf docker-tmp;
-echo "${RESET}"
-
-
-# =========================================================
-# Step 3: Create helper commands for serve/test/manage/migrate
+# Step 2: Create helper commands for serve/test/manage/migrate
 # =========================================================
 echo "${INFO}STEP 3: CREATE HELPER COMMANDS"
 echo "${RESET}TODO"
@@ -86,18 +68,23 @@ echo ""
 
 
 # =========================================================
-# Step 4: Setup up images, containers and data volumes
+# Step 3: Setup up images, containers and data volumes
 # =========================================================
 echo "${INFO}STEP 4: Setup project image, containers and any volumes required${RESET}"
+rm -rf vol/
+mkdir vol/
+touch vol/bash_history
+touch vol/ipython_history
 ./.build
 ./.requirements
+./.migrate
 # TODO: Create default admin user.
 echo "Complete"
 echo "${RESET}"
 
 
 # =========================================================
-# Step 5: Adding git hooks to ensure we are awesome developers
+# Step 4: Adding git hooks to ensure we are awesome developers
 # =========================================================
 echo "${INFO}STEP 5: GIT HOOKS${RESET}"
 
@@ -143,7 +130,7 @@ fi
 
 
 # =========================================================
-# Step 6: Setting origin master as base
+# Step 5: Setting origin master as base
 # =========================================================
 echo "${INFO}STEP 6: SET GIT UPSTREAM${RESET}"
-git branch --set-upstream-to=origin/master master;
+git branch --set-upstream-to=origin/development development;
