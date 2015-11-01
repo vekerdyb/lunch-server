@@ -48,6 +48,7 @@ INSTALLED_APPS = (
 
     'lunch.options',
     'lunch.profiles',
+    'lunch.cards',
 )
 
 SITE_ID = 1

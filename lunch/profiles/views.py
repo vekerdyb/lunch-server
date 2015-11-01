@@ -16,7 +16,7 @@ class MeView(TemplateView):
             box_size=10,
             border=4,
         )
-        qr.add_data(self.request.user.profile.uuid)
+        qr.add_data(self.request.user.card_set.filter(active=True))
         qr.make(fit=True)
         return qr.make_image()
 
@@ -29,7 +29,7 @@ class MeView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         base64_data_uri = self.get_base64_qr_data_uri()
-        response_data = {'profile_qr_code': base64_data_uri}
+        response_data = {'qr_code': base64_data_uri}
         return render(request, self.template_name, response_data)
 
 
