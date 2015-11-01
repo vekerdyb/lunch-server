@@ -5,3 +5,4 @@ django-allauth
 qrcode
 Pillow
 django-extensions
+django-grappelli
