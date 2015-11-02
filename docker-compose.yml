@@ -13,4 +13,7 @@ web:
   env_file:
     - .env
 db:
-  image: postgres
+  image: mdillon/postgis
+  environment:
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASWORD=postgres

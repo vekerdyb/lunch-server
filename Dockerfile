@@ -1,5 +1,7 @@
 FROM python:3.4
 ENV PYTHONUNBUFFERED 1
+RUN apt-get -y update
+RUN apt-get install -y postgresql-client-9.4 binutils libproj-dev gdal-bin libpq-dev
 RUN mkdir /app
 WORKDIR /app
 ADD requirements.txt /app/

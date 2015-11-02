@@ -7,3 +7,5 @@ Pillow
 django-extensions
 django-grappelli
 factory_boy
+requests
+dj_database_url
