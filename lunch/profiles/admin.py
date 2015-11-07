@@ -3,14 +3,12 @@ from lunch.profiles.models import Profile
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('get_full_name', 'get_email', 'user', 'graduation_date', 'year_of_graduation')
-
-    def get_full_name(self, obj):
-        return "%s %s" % (obj.user.first_name, obj.user.last_name)
-    get_full_name.short_description = "Full Name"
+    list_display = ('full_name', 'get_email', 'user', 'graduation_date', 'year_of_graduation')
 
     def get_email(self, obj):
-        return obj.user.email
+        if obj.user:
+            return obj.user.email
+        return '<unknown>'
     get_email.short_description = "Email"
 
 admin.site.register(Profile, ProfileAdmin)

@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.conf import settings
 from django.core.management import BaseCommand
@@ -28,12 +29,15 @@ class Command(BaseCommand):
             'kerdes1': month_string,
         }
         response = requests.post(settings.PROFILES_URL, params)
-        response_data = response.json()
+        #TODO: test
+        if response.text[:2] == '1#':
+            response_data = json.loads(response.text[2:])
+        else:
+            response_data = response.json()
         for person in response_data:
             graduation_date = self.get_graduation_date_from_class_code(person['kod'])
-            data = {
+            defaults = {
                 'remote_system_id': person['diak_id'],
                 'full_name': person['nev'],
-                'graduation_date': graduation_date
             }
-            Profile.objects.create(**data)
+            Profile.objects.update_or_create(graduation_date=graduation_date, defaults=defaults)
