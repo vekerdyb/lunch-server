@@ -12,6 +12,8 @@ User = settings.AUTH_USER_MODEL
 
 class Profile(models.Model):
     user = models.OneToOneField(User, null=True)
+    full_name = models.TextField()
+    remote_system_id = models.IntegerField(unique=True)
     graduation_date = models.DateField(null=True, blank=True)
     year_of_graduation = models.IntegerField(null=True, blank=True)
 
@@ -25,5 +27,7 @@ class Profile(models.Model):
 @receiver(post_save, sender=Profile)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created and instance:
-        uuid = hashlib.md5(str(timezone.now().timestamp).encode('utf-8')).hexdigest()
+        seed = str(timezone.now().timestamp).encode('utf-8')
+        seed += str(instance.id).encode('utf-8')
+        uuid = hashlib.md5(seed).hexdigest()
         Card.objects.create(uuid=uuid, profile=instance, active=True)

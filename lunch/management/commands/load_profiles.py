@@ -1,20 +1,39 @@
+import datetime
+
 from django.conf import settings
 from django.core.management import BaseCommand
 import requests
+from django.utils import timezone
+from lunch.helpers.helpers import DateHelper
+from lunch.profiles.models import Profile
 
 
 class Command(BaseCommand):
-    def transform_raw_meal_data(self, raw):
-        #raw = '0_1_0_0_0_1_0_0_1_0_0_0_0_0_0_1_0_0_0_0_0_0_1_1_0_1_0_0_0_1_0_0_1_1_1_0_0_0_0_1_1_1_1_0_0_0_1_1_1_1_0_0_0_0_1_0_1_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_'
-        numbers = [x == '1' for x in raw.strip('_').split('_')]
-        run_length = len(numbers) // 3
-        a = numbers[:run_length]
-        b = numbers[run_length:2 * run_length]
-        c = numbers[2 * run_length:]
+    def get_graduation_date_from_class_code(self, code):
+        code = int(code)
+        today = timezone.now().date()
+        this_year = today.year
+        current_month = today.month
+        if current_month > 6:
+            modifier = 1
+        else:
+            modifier = 0
+        graduation_date = datetime.date(this_year + 13 - code + modifier, 7, 1)
+        return graduation_date
 
     def handle(self, *args, **options):
+        month_string = timezone.now().strftime(DateHelper.MONTH_FORMAT_STRING)
         params = {
             'req': '1',
-
+            'kerdes1': month_string,
         }
-        requests.post(settings.PROFILES_URL, )
+        response = requests.post(settings.PROFILES_URL, params)
+        response_data = response.json()
+        for person in response_data:
+            graduation_date = self.get_graduation_date_from_class_code(person['kod'])
+            data = {
+                'remote_system_id': person['diak_id'],
+                'full_name': person['nev'],
+                'graduation_date': graduation_date
+            }
+            Profile.objects.create(**data)
