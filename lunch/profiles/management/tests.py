@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from unittest import mock
 
 from django.conf import settings
@@ -107,12 +108,23 @@ class LoadProfilesTest(TestCase):
     def test_should_not_duplicate_users(self, mock_requests, mock_timezone):
         self.assertEqual(Profile.objects.count(), 0)
         mock_requests.post.return_value = self.mock_good_response_object
-        mock_timezone.now.return_value = timezone.datetime(2016, 1, 1, 0, 0)
+        mock_timezone.now.return_value = timezone.datetime(2015, 11, 1, 0, 0)
+
         self.command.handle()
+
+        updated_data = deepcopy(self.good_data)
+        updated_data[0]['nev'] = 'Updated name'
+        updated_data[0]['kod'] = '12'
+        updated_response_object = self.ResponseMock(updated_data)
+        mock_requests.post.return_value = updated_response_object
+
         self.command.handle()
+
         profiles = Profile.objects.filter(remote_system_id=1)
         self.assertEqual(profiles.count(), 1)
-
+        self.assertEqual(profiles[0].remote_system_id, 1)
+        self.assertEqual(profiles[0].full_name, 'Updated name')
+        self.assertEqual(profiles[0].year_of_graduation, 2017)
 
 def generate_meal_string(data, number_of_days):
     """

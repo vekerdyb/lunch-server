@@ -36,8 +36,11 @@ class Command(BaseCommand):
             response_data = response.json()
         for person in response_data:
             graduation_date = self.get_graduation_date_from_class_code(person['kod'])
-            defaults = {
+            data = {
                 'remote_system_id': person['diak_id'],
-                'full_name': person['nev'],
             }
-            Profile.objects.update_or_create(graduation_date=graduation_date, defaults=defaults)
+            defaults = {
+                'full_name': person['nev'],
+                'graduation_date': graduation_date,
+            }
+            Profile.objects.update_or_create(defaults=defaults, **data)
