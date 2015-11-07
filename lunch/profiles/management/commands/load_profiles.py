@@ -29,7 +29,6 @@ class Command(BaseCommand):
             'kerdes1': month_string,
         }
         response = requests.post(settings.PROFILES_URL, params)
-        #TODO: test
         if response.text[:2] == '1#':
             response_data = json.loads(response.text[2:])
         else:
