@@ -1,12 +1,7 @@
-import base64
-import io
-
-import qrcode
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import TemplateView
 from lunch.cards.helpers import CardQR
 from lunch.profiles.models import Profile
-from rest_framework.generics import RetrieveAPIView
 
 
 class QRBaseView(TemplateView):
@@ -34,7 +29,3 @@ class CardView(QRBaseView):
     def get_profile(self):
         pk = self.kwargs.get('pk')
         return get_object_or_404(Profile, remote_system_id=int(pk))
-
-
-class OptionByUUID(RetrieveAPIView):
-    pass

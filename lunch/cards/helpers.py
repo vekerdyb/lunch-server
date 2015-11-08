@@ -20,7 +20,6 @@ class CardQR(object):
             box_size=self.box_size,
             border=self.border,
         )
-        print(len(data), data)
         qr.add_data(data)
         qr.make(fit=True)
         return qr.make_image()
