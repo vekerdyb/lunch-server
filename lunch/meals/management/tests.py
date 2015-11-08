@@ -1,11 +1,15 @@
 import json
+from datetime import timedelta
 from unittest import mock
 
 from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
+from lunch.helpers.messages import MEAL_FOR_MISSING_PROFILE_ERROR
 from lunch.meals.models import Meal
 from lunch.meals.management.commands.get_meals import Command
+from lunch.profiles.factories import ProfileFactory
+from lunch.profiles.models import Profile
 
 
 def generate_meal_string(data, number_of_days):
@@ -53,6 +57,9 @@ class LoadMealsTest(TestCase):
             return self.data
 
     def setUp(self):
+        ProfileFactory(remote_system_id=1)
+        ProfileFactory(remote_system_id=230)
+        ProfileFactory(remote_system_id=231)
         self.good_data = [
             {
                 "0": "1",
@@ -63,7 +70,7 @@ class LoadMealsTest(TestCase):
             {
                 "0": "230",
                 "diak_id": "230",
-                "1": self.only_meal_1_every_day,
+                "1": self.meal_1_1_meal_2_2_meal_3_3,
                 "havikaja": self.meal_1_1_meal_2_2_meal_3_3,
             },
             {
@@ -92,17 +99,43 @@ class LoadMealsTest(TestCase):
     @mock.patch('lunch.meals.management.commands.get_meals.requests')
     def test_should_create_meal_options_as_to_match_response_from_lunch_site(self, mock_requests, mock_timezone):
         mock_requests.post.return_value = self.mock_good_response_object
-        mock_timezone.now.return_value = timezone.datetime(2015, 11, 1, 0, 0)
+        now = timezone.datetime(2015, 11, 1, 0, 0)
+        mock_timezone.now.return_value = now
+        self.command.handle()
+
+        meals_for_user_1 = Meal.objects.filter(profile__remote_system_id=1).order_by('date')
+        self.assertEqual(meals_for_user_1.count(), 30)
+        for d, meal in enumerate(meals_for_user_1):
+            self.assertEqual(meal.profile.remote_system_id, 1)
+            self.assertEqual(meal.date, now.date() + timedelta(days=d))
+            self.assertEqual(meal.meal_type, 'A')
+
+        meals_for_user_2 = Meal.objects.filter(profile__remote_system_id=230).order_by('date')
+        self.assertEqual(meals_for_user_2.count(), 3)
+        self.assertEqual(meals_for_user_2[0].profile.remote_system_id, 230)
+        self.assertEqual(meals_for_user_2[0].date, now.date())
+        self.assertEqual(meals_for_user_2[0].meal_type, 'A')
+        self.assertEqual(meals_for_user_2[1].profile.remote_system_id, 230)
+        self.assertEqual(meals_for_user_2[1].date, now.date() + timedelta(days=1))
+        self.assertEqual(meals_for_user_2[1].meal_type, 'B')
+        self.assertEqual(meals_for_user_2[2].profile.remote_system_id, 230)
+        self.assertEqual(meals_for_user_2[2].date, now.date() + timedelta(days=2))
+        self.assertEqual(meals_for_user_2[2].meal_type, 'V')
+
+        self.assertEqual(Meal.objects.filter(profile__remote_system_id=231).count(), 0)
+
+    @mock.patch('lunch.meals.management.commands.get_meals.requests')
+    def test_should_update_existing_meal_options(self, mock_requests):
+        mock_requests.post.return_value = self.mock_good_response_object
+        self.command.handle()
         self.command.handle()
         meals_for_user_1 = Meal.objects.filter(profile__remote_system_id=1)
         self.assertEqual(meals_for_user_1.count(), 30)
 
-    @mock.patch('lunch.meals.management.commands.get_meals.timezone')
+    @mock.patch('lunch.meals.management.commands.get_meals.logger')
     @mock.patch('lunch.meals.management.commands.get_meals.requests')
-    def test_should_update_existing_meal_options(self, mock_requests, mock_timezone):
-        pass
-
-    @mock.patch('lunch.meals.management.commands.get_meals.timezone')
-    @mock.patch('lunch.meals.management.commands.get_meals.requests')
-    def test_should_log_non_existing_students_with_meals(self, mock_requests, mock_timezone):
-        pass
+    def test_should_log_non_existing_students_with_meals(self, mock_requests, mock_logger):
+        Profile.objects.filter(remote_system_id=231).delete()
+        mock_requests.post.return_value = self.mock_good_response_object
+        self.command.handle()
+        mock_logger.error.assert_called_once_with(MEAL_FOR_MISSING_PROFILE_ERROR.format(231))

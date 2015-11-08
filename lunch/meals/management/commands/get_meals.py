@@ -1,13 +1,17 @@
 import datetime
 import json
+import logging
 
 import requests
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils import timezone
 from lunch.helpers.helpers import DateHelper
+from lunch.helpers.messages import MEAL_FOR_MISSING_PROFILE_ERROR
 from lunch.meals.models import Meal
 from lunch.profiles.models import Profile
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -34,17 +38,23 @@ class Command(BaseCommand):
             response_data = json.loads(response.text[2:])
         else:
             response_data = response.json()
+        new_meals = []
         for item in response_data:
             user_id = item['diak_id']
+            try:
+                profile = Profile.objects.get(remote_system_id=user_id)
+            except Profile.DoesNotExist:
+                logger.error(MEAL_FOR_MISSING_PROFILE_ERROR.format(user_id))
             meals = self.transform_raw_meal_data(item['havikaja'])
-            if meals:
+            if meals and profile:
                 for meal_type_index, meal_type in enumerate(meals):
                     for day, meal in enumerate(meal_type, start=1):
-                        data = {
-                            'meal_type': Meal.MEAL_CHOICES[meal_type_index][0],
-                            'profile': Profile.objects.get(remote_system_id=user_id),
-                            'date': datetime.date(now.year, now.month, day)
-                        }
                         if meal:
-                            Meal(**data)
-
+                            data = {
+                                'profile': profile,
+                                'date': datetime.date(now.year, now.month, day)
+                            }
+                            defaults = {
+                                'meal_type': Meal.MEAL_CHOICES[meal_type_index][0],
+                            }
+                            Meal.objects.update_or_create(defaults=defaults, **data)
