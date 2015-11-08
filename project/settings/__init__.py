@@ -52,7 +52,6 @@ INSTALLED_APPS = (
 
     'lunch.cards',
     'lunch.meals',
-    'lunch.options',
     'lunch.profiles',
 )
 
