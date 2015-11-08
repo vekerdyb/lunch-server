@@ -33,7 +33,7 @@ def generate_meal_string(data, number_of_days):
 
 
 class LoadMealsTest(TestCase):
-    only_meal_1_every_day = generate_meal_string([range(1, 31), [], []], 31)
+    only_meal_1_every_day = generate_meal_string([range(1, 31), [], []], 30)
     meal_1_1_meal_2_2_meal_3_3 = generate_meal_string([[1], [2], [3]], 30)
 
     def test_meal_string_generator(self):
@@ -87,3 +87,22 @@ class LoadMealsTest(TestCase):
             'kerdes1': '201511'
         }
         mock_requests.post.assert_called_once_with(settings.MEALS_URL, request_params)
+
+    @mock.patch('lunch.meals.management.commands.get_meals.timezone')
+    @mock.patch('lunch.meals.management.commands.get_meals.requests')
+    def test_should_create_meal_options_as_to_match_response_from_lunch_site(self, mock_requests, mock_timezone):
+        mock_requests.post.return_value = self.mock_good_response_object
+        mock_timezone.now.return_value = timezone.datetime(2015, 11, 1, 0, 0)
+        self.command.handle()
+        meals_for_user_1 = Meal.objects.filter(profile__remote_system_id=1)
+        self.assertEqual(meals_for_user_1.count(), 30)
+
+    @mock.patch('lunch.meals.management.commands.get_meals.timezone')
+    @mock.patch('lunch.meals.management.commands.get_meals.requests')
+    def test_should_update_existing_meal_options(self, mock_requests, mock_timezone):
+        pass
+
+    @mock.patch('lunch.meals.management.commands.get_meals.timezone')
+    @mock.patch('lunch.meals.management.commands.get_meals.requests')
+    def test_should_log_non_existing_students_with_meals(self, mock_requests, mock_timezone):
+        pass
