@@ -1,16 +1,15 @@
-import datetime
+import json
 
+import requests
 from django.conf import settings
 from django.core.management import BaseCommand
-import requests
 from django.utils import timezone
 from lunch.helpers.helpers import DateHelper
-from lunch.profiles.models import Profile
 
 
 class Command(BaseCommand):
     def transform_raw_meal_data(self, raw):
-        #raw = '0_1_0_0_0_1_0_0_1_0_0_0_0_0_0_1_0_0_0_0_0_0_1_1_0_1_0_0_0_1_0_0_1_1_1_0_0_0_0_1_1_1_1_0_0_0_1_1_1_1_0_0_0_0_1_0_1_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_'
+        # raw = '0_1_0_0_0_1_0_0_1_0_0_0_0_0_0_1_0_0_0_0_0_0_1_1_0_1_0_0_0_1_0_0_1_1_1_0_0_0_0_1_1_1_1_0_0_0_1_1_1_1_0_0_0_0_1_0_1_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_'
         numbers = [x == '1' for x in raw.strip('_').split('_')]
         run_length = len(numbers) // 3
         meal_a = numbers[:run_length]
@@ -25,6 +24,9 @@ class Command(BaseCommand):
             'kerdes1': month_string,
         }
         response = requests.post(settings.PROFILES_URL, params)
-        response_data = response.json()
+        if response.text[:2] == '1#':
+            response_data = json.loads(response.text[2:])
+        else:
+            response_data = response.json()
         for meal in response_data:
             pass

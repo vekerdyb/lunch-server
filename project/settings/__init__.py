@@ -50,9 +50,10 @@ INSTALLED_APPS = (
 
     'django_extensions',
 
+    'lunch.cards',
+    'lunch.meals',
     'lunch.options',
     'lunch.profiles',
-    'lunch.cards',
 )
 
 SITE_ID = 1
@@ -133,3 +134,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Project settings
 PROFILES_URL = os.environ['PROFILES_URL']
+MEALS_URL = os.environ['MEALS_URL']
