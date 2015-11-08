@@ -1,13 +1,17 @@
 from django.contrib import admin
-
-# Register your models here.
 from lunch.cards.models import Card
+
 
 class CardAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'uuid', 'active')
+    ordering = ('profile__full_name',)
+    list_editable = ('active',)
 
     def get_full_name(self, obj):
-        return "%s %s" % (obj.user.first_name, obj.user.last_name)
+        return obj.profile.full_name
+
     get_full_name.short_description = "Full Name"
+    get_full_name.admin_order_field = 'profile__full_name'
+
 
 admin.site.register(Card, CardAdmin)

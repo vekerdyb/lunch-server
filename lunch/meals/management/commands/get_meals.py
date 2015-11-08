@@ -38,7 +38,6 @@ class Command(BaseCommand):
             response_data = json.loads(response.text[2:])
         else:
             response_data = response.json()
-        new_meals = []
         for item in response_data:
             user_id = item['diak_id']
             try:

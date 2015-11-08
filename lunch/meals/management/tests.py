@@ -6,8 +6,8 @@ from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 from lunch.helpers.messages import MEAL_FOR_MISSING_PROFILE_ERROR
-from lunch.meals.models import Meal
 from lunch.meals.management.commands.get_meals import Command
+from lunch.meals.models import Meal
 from lunch.profiles.factories import ProfileFactory
 from lunch.profiles.models import Profile
 
